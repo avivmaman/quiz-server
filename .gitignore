@@ -1,0 +1,8 @@
+/node_modules/
+/root/
+/newRoot/
+/public/
+/.idea/
+
+fixCategories.js
+loadData.js
