@@ -61,13 +61,13 @@ const getResultsOfAnsweredQuestions = async (results) => {
     return questions.map((question, index) => {
         const resultQuestion = results.find(i => i.id === question._id.toString());
         const isCorrect = question.answers.every((answer) => {
-            return resultQuestion.answers.includes(answer - 1);
+            return resultQuestion.answers.includes(answer);
         });
         let correctAnswer;
         let notCorrectAnswer;
         if(!isCorrect) {
-            correctAnswer = question.answers.filter((answer) => !resultQuestion.answers.includes(answer - 1));
-            notCorrectAnswer = question.answers.filter((answer) => resultQuestion.answers.includes(answer - 1));
+            correctAnswer = question.answers.filter((answer) => !resultQuestion.answers.includes(answer));
+            notCorrectAnswer = question.answers.filter((answer) => resultQuestion.answers.includes(answer));
         }
         return {
             question: helper.questionDao(question),
@@ -76,6 +76,13 @@ const getResultsOfAnsweredQuestions = async (results) => {
             notCorrectAnswer,
         }
     });
+}
+
+const saveQuestion = async (question) => {
+    const newQuestion = await Question.findById(question.id);
+    newQuestion.answers = question.answers;
+    newQuestion.answerDescription = question.answerDescription;
+    await newQuestion.save();
 }
 const getAllQuestionsController = async (req, res) => {
     try{
@@ -110,11 +117,21 @@ const getResultsOfAnsweredQuestionsController = async (req, res) => {
         res.status(500).send('Error retrieving the questions');
     }
 };
+const saveQuestionController = async (req, res) => {
+    try {
+        await saveQuestion(req.body);
+        res.send('ok');
+    }catch (e) {
+        console.log('Error', e);
+        res.status(500).send('Error saving the questions');
+    }
+};
 
 module.exports = {
     getAllQuestionsController,
     getQuestionsSplitByAllCategoriesCountController,
     getResultsOfAnsweredQuestionsController,
+    saveQuestionController,
     getAllQuestions,
     getQuestionsSplitByAllCategoriesCount
 };

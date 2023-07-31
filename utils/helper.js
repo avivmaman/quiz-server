@@ -15,18 +15,17 @@ const questionLimiter = rateLimit({
     message: 'Too many requests, please try again later.',
 });
 
-const questionDao = (question) => {
+const questionDao = (question, admin = true) => {
         const imagePath = `https://doa8awg86k4s0.cloudfront.net${question.questionImage}`;
-        return {
+        let returnObject = {
             id: question._id.toString(),
             question : imagePath,
-            answers : [
-                "1",
-                "2",
-                "3",
-                "4"
-            ]
+            answerDescription : question.answerDescription,
         };
+        if(admin) {
+            returnObject.answers = question.answers;
+        }
+        return returnObject;
 }
 const questionsDao = (questions) => {
     return questions.map((image) => questionDao(image));
