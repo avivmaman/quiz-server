@@ -2,7 +2,7 @@ const {Question, Category} = require("../../utils/Models");
 const helper = require("../../utils/helper");
 const mongoose = require("mongoose");
 const getAllQuestions = async () => {
-    const questionsQuery = await Question.find({});
+    const questionsQuery = await Question.find({}).populate('category');
     return helper.questionsDao(questionsQuery);
 };
 
@@ -16,14 +16,15 @@ const getQuestionsSplitByAllCategoriesCount = async (limit) => {
         {
             $match: {
                 category: { $in: categoryIds.map(id => new mongoose.Types.ObjectId(id)) }
-            }
+            },
         },
         {
             $group: {
                 _id: "$category",
                 questions: { $push: "$$ROOT" }
             }
-        }
+        },
+        { $lookup: {from: 'categories', localField: 'category', foreignField: '_id', as: 'category'} },
     ]);
     const aggregatedQuestions = results.reduce((accumulator, category) => {
         // Randomize the questions within each category
@@ -49,7 +50,8 @@ const getQuestionsSplitByAllCategoriesCount = async (limit) => {
             },
             {
                 $sample: { size: remainingQuestions }
-            }
+            },
+            { $lookup: {from: 'categories', localField: 'category', foreignField: '_id', as: 'category'} },
         ]);
         aggregatedQuestions.push(...moreResults);
     }

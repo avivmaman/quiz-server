@@ -16,11 +16,15 @@ const questionLimiter = rateLimit({
 });
 
 const questionDao = (question, admin = true) => {
+        if(Array.isArray(question.category) &&  question.category.length > 0) {
+            question.category = question.category[0];
+        }
         const imagePath = `https://doa8awg86k4s0.cloudfront.net${question.questionImage}`;
         let returnObject = {
             id: question._id.toString(),
             question : imagePath,
             answerDescription : question.answerDescription,
+            category : question.category.categoryName,
         };
         if(admin) {
             returnObject.answers = question.answers;
