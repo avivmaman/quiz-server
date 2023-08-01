@@ -6,6 +6,22 @@ const getAllQuestions = async () => {
     return helper.questionsDao(questionsQuery);
 };
 
+const getAllCategoryQuestions = async (category) => {
+    const questionsQuery = await Question.find({ category }).populate('category');
+    const randomizedQuestions = questionsQuery.sort(() => Math.random() - 0.5);
+    return helper.questionsDao(randomizedQuestions);
+};
+
+const getCategoryTest = async (category) => {
+    const questionsQuery = await getAllCategoryQuestions(category);
+    if(questionsQuery.length < 20){
+        return questionsQuery;
+    }else{
+        const randomizedQuestions = questionsQuery.sort(() => Math.random() - 0.5);
+        return randomizedQuestions.slice(0, 20);
+    }
+};
+
 const getQuestionsSplitByAllCategoriesCount = async (limit) => {
     let categoryIds = await Category.find({});
     categoryIds = categoryIds.map((cat) => cat._id);
@@ -97,6 +113,28 @@ const getAllQuestionsController = async (req, res) => {
 
 };
 
+const getAllCategoryQuestionsController = async (req, res) => {
+    try{
+        const allQuestions = await getAllCategoryQuestions(req.params.category);
+        res.json(allQuestions);
+    }catch (e) {
+        console.log('Error', e);
+        res.status(403).send({error : "Cant get all questions, try again later"});
+    }
+
+};
+
+const getCategoryTestController = async (req, res) => {
+    try{
+        const allQuestions = await getCategoryTest(req.params.category);
+        res.json(allQuestions);
+    }catch (e) {
+        console.log('Error', e);
+        res.status(403).send({error : "Cant get all questions, try again later"});
+    }
+
+};
+
 const getQuestionsSplitByAllCategoriesCountController = async (req, res) => {
     try {
         const aggregatedQuestions = await getQuestionsSplitByAllCategoriesCount(10);
@@ -134,6 +172,8 @@ module.exports = {
     getQuestionsSplitByAllCategoriesCountController,
     getResultsOfAnsweredQuestionsController,
     saveQuestionController,
+    getAllCategoryQuestionsController,
+    getCategoryTestController,
     getAllQuestions,
     getQuestionsSplitByAllCategoriesCount
 };
