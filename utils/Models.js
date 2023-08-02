@@ -7,6 +7,10 @@ const questionSchema = new Schema({
         type: String,
         required: true
     },
+    questionDescription: {
+        type: String,
+        required: true
+    },
     answerDescription: {
         type: String,
         required: true

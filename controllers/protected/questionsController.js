@@ -100,6 +100,7 @@ const saveQuestion = async (question) => {
     const newQuestion = await Question.findById(question.id);
     newQuestion.answers = question.answers;
     newQuestion.answerDescription = question.answerDescription;
+    newQuestion.questionDescription = question.questionDescription;
     await newQuestion.save();
 }
 const getAllQuestionsController = async (req, res) => {
