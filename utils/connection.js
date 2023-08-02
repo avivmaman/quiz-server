@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const connectionURI = 'mongodb+srv://aviv1:aviv1@cluster0.mdrxje8.mongodb.net/quiz';
+const connectionURI = process.env.mongoURI;
 
 mongoose.connect(connectionURI, {
     useNewUrlParser: true,
