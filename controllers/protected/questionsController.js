@@ -2,7 +2,7 @@ const {Question, Category} = require("../../utils/Models");
 const helper = require("../../utils/helper");
 const mongoose = require("mongoose");
 const getAllQuestions = async () => {
-    const questionsQuery = await Question.find({}).populate('category');
+    const questionsQuery = await Question.find({}).sort({category: 1, questionNumber: 1}).populate('category');
     return helper.questionsDao(questionsQuery);
 };
 

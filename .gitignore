@@ -5,6 +5,7 @@
 /.idea/
 
 fixCategories.js
+fixQuestions.js
 loadData.js
 
 .env

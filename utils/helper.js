@@ -22,6 +22,7 @@ const questionDao = (question, admin = true) => {
         const imagePath = `https://doa8awg86k4s0.cloudfront.net${question.questionImage}`;
         let returnObject = {
             id: question._id.toString(),
+            questionNumber : question.questionNumber,
             questionDescription : question.questionDescription,
             question : imagePath,
             answerDescription : question.answerDescription,
