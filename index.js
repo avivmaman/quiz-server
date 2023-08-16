@@ -26,7 +26,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }))
 
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '8000kb'}))
 
 // Apply security headers with Helmet
 app.use(helmet());
