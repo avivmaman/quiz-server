@@ -36,6 +36,10 @@ const categorySchema = new Schema({
         type: String,
         required: true
     },
+    description: {
+        type: String,
+        required: false
+    },
     parentCategory: {
         type: Schema.Types.ObjectId,
         ref: 'Category'
