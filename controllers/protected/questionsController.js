@@ -6,6 +6,11 @@ const getAllQuestions = async () => {
     return helper.questionsDao(questionsQuery);
 };
 
+const getAllQuestionsByLimit = async (skip, limit = 1) => {
+    const questionsQuery = await Question.find({}).sort({category: 1, questionNumber: 1}).populate('category').skip(skip).limit(limit);
+    return helper.questionsDao(questionsQuery);
+};
+
 const getQuestionByObject = async (objectToFind) => {
     const questionsQuery = await Question.findOne(objectToFind).populate('category');
     return helper.questionDao(questionsQuery);
@@ -127,7 +132,7 @@ const getQuestionNumberController = async (req, res) => {
             const allQuestions = await getAllQuestions();
             count = allQuestions.length;
         }
-        const question = await getQuestionByObject({questionNumber: req.params.number});
+        const question = (await getAllQuestionsByLimit(req.params.number))[0];
         res.json({question, count});
     }catch (e) {
         console.log('Error', e);
