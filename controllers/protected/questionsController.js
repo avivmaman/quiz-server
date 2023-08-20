@@ -6,6 +6,12 @@ const getAllQuestions = async () => {
     return helper.questionsDao(questionsQuery);
 };
 
+const getQuestionByObject = async (objectToFind) => {
+    const questionsQuery = await Question.findOne(objectToFind).populate('category');
+    return helper.questionDao(questionsQuery);
+};
+
+
 const getAllCategoryQuestions = async (category) => {
     const questionsQuery = await Question.find({ category }).populate('category');
     const randomizedQuestions = questionsQuery.sort(() => Math.random() - 0.5);
@@ -114,6 +120,22 @@ const getAllQuestionsController = async (req, res) => {
 
 };
 
+const getQuestionNumberController = async (req, res) => {
+    try{
+        let count = 0;
+        if(req.params.number === '1'){
+            const allQuestions = await getAllQuestions();
+            count = allQuestions.length;
+        }
+        const question = await getQuestionByObject({questionNumber: req.params.number});
+        res.json({question, count});
+    }catch (e) {
+        console.log('Error', e);
+        res.status(403).send({error : "Cant get all questions, try again later"});
+    }
+
+};
+
 const getAllCategoryQuestionsController = async (req, res) => {
     try{
         const allQuestions = await getAllCategoryQuestions(req.params.category);
@@ -175,6 +197,7 @@ module.exports = {
     saveQuestionController,
     getAllCategoryQuestionsController,
     getCategoryTestController,
+    getQuestionNumberController,
     getAllQuestions,
     getQuestionsSplitByAllCategoriesCount
 };
