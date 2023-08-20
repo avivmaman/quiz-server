@@ -132,7 +132,7 @@ const getQuestionNumberController = async (req, res) => {
             const allQuestions = await getAllQuestions();
             count = allQuestions.length;
         }
-        const question = (await getAllQuestionsByLimit(req.params.number))[0];
+        const question = (await getAllQuestionsByLimit(req.params.number - 1))[0];
         res.json({question, count});
     }catch (e) {
         console.log('Error', e);
