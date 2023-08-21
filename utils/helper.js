@@ -1,5 +1,7 @@
 const {auth} = require("express-oauth2-jwt-bearer");
 const rateLimit = require('express-rate-limit');
+const UserMetadata = require("supertokens-node/recipe/usermetadata");
+const EmailPassword = require("supertokens-node/recipe/emailpassword");
 
 // Authorization middleware. When used, the Access Token must
 // exist and be verified against the Auth0 JSON Web Key Set.
@@ -14,6 +16,33 @@ const questionLimiter = rateLimit({
     max: 20, // Limit each IP to 1 request per 30 seconds
     message: 'Too many requests, please try again later.',
 });
+
+const addClaims = async (req, res, next) => {
+    const session = req.session;
+    const userId = session.getUserId();
+
+    const { metadata } = await UserMetadata.getUserMetadata(userId);
+    const isAdmin = metadata.hasOwnProperty("isAdmin") ? metadata.isAdmin : false;
+    let userInfo = await EmailPassword.getUserById(userId);
+
+    await session.mergeIntoAccessTokenPayload(
+        { isAdmin, userInfo }
+    );
+
+    next();
+}
+
+const validateAdmin = async (req, res, next) => {
+    const session = req.session;
+    const userId = session.getUserId();
+
+    const { metadata } = await UserMetadata.getUserMetadata(userId);
+    if(metadata.isAdmin) {
+        next();
+    } else {
+        res.status(401).send("Unauthorized");
+    }
+}
 
 const questionDao = (question, admin = true) => {
         if(Array.isArray(question.category) &&  question.category.length > 0) {
@@ -41,5 +70,7 @@ module.exports = {
     questionDao,
     questionsDao,
     checkJwt,
-    questionLimiter
+    questionLimiter,
+    validateAdmin,
+    addClaims
 };

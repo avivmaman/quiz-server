@@ -18,7 +18,8 @@
     "express-oauth2-jwt-bearer": "^1.5.0",
     "express-rate-limit": "^6.7.1",
     "helmet": "^7.0.0",
-    "mongoose": "^7.4.0"
+    "mongoose": "^7.4.0",
+    "supertokens-node": "^15.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
