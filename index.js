@@ -55,7 +55,11 @@ app.use(bodyParser.json({limit: '8000kb'}))
 // Apply security headers with Helmet
 // app.use(helmet());
 
-app.use(cors());
+app.use(cors({
+    origin: [process.env.websiteDomain,"http://localhost:3000"],
+    allowedHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
+    credentials: true,
+}));
 
 app.use(middleware());
 
