@@ -63,6 +63,7 @@ app.use(bodyParser.json({limit: '8000kb'}))
 // app.use(helmet());
 
 app.use(cors({
+
     origin: process.env.websiteDomain,
     allowedHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
     credentials: true,
