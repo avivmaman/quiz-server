@@ -43,13 +43,6 @@ const setCategoriesRoutes = require("./routes/protected/categoriesRoute");
 const setUsersRoute = require("./routes/protected/usersRoute");
 const {errorHandler} = require("supertokens-node/lib/build/framework/express");
 
-// Authorization middleware. When used, the Access Token must
-// exist and be verified against the Auth0 JSON Web Key Set.
-const checkJwt = auth({
-    audience: 'uri://quiz.app',
-    issuerBaseURL: `https://quiz-app-il.eu.auth0.com/`,
-});
-
 // Initialize App
 const app = express();
 
@@ -62,12 +55,7 @@ app.use(bodyParser.json({limit: '8000kb'}))
 // Apply security headers with Helmet
 // app.use(helmet());
 
-app.use(cors({
-
-    origin: process.env.websiteDomain,
-    allowedHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
-    credentials: true,
-}));
+app.use(cors());
 
 app.use(middleware());
 
