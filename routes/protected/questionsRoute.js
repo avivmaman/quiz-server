@@ -5,7 +5,7 @@ const {getAllQuestionsController, getQuestionsSplitByAllCategoriesCountControlle
 } = require("../../controllers/protected/questionsController");
 const setQuestionsRoutes = (app) => {
     app.get('/api/questions', checkJwt, questionLimiter, getAllQuestionsController);
-    app.get('/api/questions/:number', checkJwt, questionLimiter, getQuestionNumberController);
+    app.get('/api/questions/byIndex/:number', checkJwt, questionLimiter, getQuestionNumberController);
     app.get('/api/mainQuiz', checkJwt, questionLimiter, getQuestionsSplitByAllCategoriesCountController);
 
     app.get('/api/questions/:category', checkJwt, questionLimiter, getAllCategoryQuestionsController);
