@@ -25,6 +25,10 @@ const questionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Category',
         required: true
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
 }, { timestamps: true });
 

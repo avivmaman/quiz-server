@@ -27,6 +27,7 @@ const questionDao = (question, admin = true) => {
             question : imagePath,
             answerDescription : question.answerDescription,
             category : question.category.categoryName,
+            isActive: question.isActive,
         };
         if(admin) {
             returnObject.answers = question.answers;
@@ -51,10 +52,21 @@ const getClaimFromAuth0= (auth0, claimToGet, fromSubClaims = true) => {
     return null;
 }
 
+const isAdmin = (req, res, next) => {
+    const auth = req.auth;
+    const allowedRoles = getClaimFromAuth0(auth, 'x-allowed-roles');
+    if(allowedRoles.includes('admin')) {
+        next();
+    }else{
+        res.status(403).send({error : "Unauthorized"});
+    }
+}
+
 module.exports = {
     questionDao,
     questionsDao,
     getClaimFromAuth0,
+    isAdmin,
     checkJwt,
     questionLimiter
 };
