@@ -37,9 +37,24 @@ const questionsDao = (questions) => {
     return questions.map((image) => questionDao(image));
 }
 
+const getClaimFromAuth0= (auth0, claimToGet, fromSubClaims = true) => {
+    const claims = auth0.payload;
+    if(fromSubClaims){
+        const uri = "uri://quiz.app/jwt/claims";
+        if(claims.hasOwnProperty(uri) && claims[uri].hasOwnProperty(claimToGet)) {
+            return claims[uri][claimToGet];
+        }
+    }
+    if(claims.hasOwnProperty(claimToGet)) {
+        return claims[claimToGet];
+    }
+    return null;
+}
+
 module.exports = {
     questionDao,
     questionsDao,
+    getClaimFromAuth0,
     checkJwt,
     questionLimiter
 };

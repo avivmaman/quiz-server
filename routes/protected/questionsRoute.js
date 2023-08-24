@@ -11,7 +11,7 @@ const setQuestionsRoutes = (app) => {
     app.get('/api/questions/:category', checkJwt, questionLimiter, getAllCategoryQuestionsController);
     app.get('/api/questions/:category/test', checkJwt, questionLimiter, getCategoryTestController);
 
-    app.post('/api/mainQuiz', checkJwt, questionLimiter, getResultsOfAnsweredQuestionsController);
+    app.post('/api/mainQuiz/:testType', checkJwt, questionLimiter, getResultsOfAnsweredQuestionsController);
 
     app.post('/api/saveQna', checkJwt, questionLimiter, saveQuestionController);
 }

@@ -1,4 +1,4 @@
-const {Question, Category} = require("../../utils/Models");
+const {Question, Category, UserTests} = require("../../utils/Models");
 const helper = require("../../utils/helper");
 const mongoose = require("mongoose");
 const getAllQuestions = async () => {
@@ -85,26 +85,43 @@ const getQuestionsSplitByAllCategoriesCount = async (limit) => {
     return helper.questionsDao(aggregatedQuestions);
 }
 
-const getResultsOfAnsweredQuestions = async (results) => {
-    const questions = await Question.find({ _id: { $in: results.map(result => result.id) } });
-    return questions.map((question, index) => {
+const getResultsIDOfAnsweredQuestions = async (results, userId, testType) => {
+    const resultsIds = results.map(result => result.id);
+    const questions = await Question.find({ _id: { $in: resultsIds } });
+
+    let resultsByIds = [];
+    let correctAnswer;
+    let notCorrectAnswer;
+
+    questions.map((question, index) => {
         const resultQuestion = results.find(i => i.id === question._id.toString());
         const isCorrect = question.answers.every((answer) => {
             return resultQuestion.answers.includes(answer);
         });
-        let correctAnswer;
-        let notCorrectAnswer;
+
         if(!isCorrect) {
             correctAnswer = question.answers.filter((answer) => !resultQuestion.answers.includes(answer));
             notCorrectAnswer = question.answers.filter((answer) => resultQuestion.answers.includes(answer));
         }
-        return {
-            question: helper.questionDao(question),
-            isCorrect,
-            correctAnswer,
-            notCorrectAnswer,
-        }
+        resultsByIds.push({
+            qid: question._id.toString(),
+            results: [...resultQuestion.answers].pop()
+        });
     });
+    const score = correctAnswer.length / (correctAnswer.length + notCorrectAnswer.length);
+    return await saveUserTest(resultsIds, resultsByIds, score, userId, testType);
+}
+
+const saveUserTest = async (questionsIds, answers, score, userId, testType) => {
+    const newUserTest = new UserTests({
+        uid: userId,
+        testType,
+        score,
+        test: questionsIds,
+        answers
+    });
+    await newUserTest.save();
+    return newUserTest._id;
 }
 
 const saveQuestion = async (question) => {
@@ -178,8 +195,12 @@ const getQuestionsSplitByAllCategoriesCountController = async (req, res) => {
 
 const getResultsOfAnsweredQuestionsController = async (req, res) => {
     try {
-        const results = await getResultsOfAnsweredQuestions(req.body);
-        res.send(results);
+        const auth = req.auth;
+        const userId = helper.getClaimFromAuth0(auth, 'id');
+        const resultsId = await getResultsIDOfAnsweredQuestions(req.body, userId, req.params.testType);
+        res.send({
+            resultsId
+        });
     }catch (e) {
         console.log('Error', e);
         res.status(500).send('Error retrieving the questions');

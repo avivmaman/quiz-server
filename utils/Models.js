@@ -26,7 +26,7 @@ const questionSchema = new Schema({
         ref: 'Category',
         required: true
     }
-});
+}, { timestamps: true });
 
 const Question = mongoose.model('Question', questionSchema);
 
@@ -44,11 +44,46 @@ const categorySchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Category'
     }
-});
+}, { timestamps: true });
 
 const Category = mongoose.model('Category', categorySchema);
 
+// Category Model
+const userTestsSchema = new Schema({
+    uid: {
+        type: String,
+        required: true
+    },
+    testType: {
+        type: String,
+        default: 'main'
+    },
+    score: {
+        type: Number,
+        required: true
+    },
+    test: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Question',
+        required: true
+    }],
+    answers: [{
+        qid: {
+            type: String,
+            required: true
+        },
+        results:{
+            type: Number,
+            required: true
+        }
+    }]
+
+}, { timestamps: true });
+
+const UserTests = mongoose.model('UserTests', userTestsSchema);
+
 module.exports = {
     Question,
-    Category
+    Category,
+    UserTests
 };
