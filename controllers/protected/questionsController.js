@@ -90,25 +90,29 @@ const getResultsIDOfAnsweredQuestions = async (results, userId, testType) => {
     const questions = await Question.find({ _id: { $in: resultsIds } });
 
     let resultsByIds = [];
-    let correctAnswer;
-    let notCorrectAnswer;
+    let correctAnswer = 0;
+    let notCorrectAnswer = 0;
 
     questions.map((question, index) => {
         const resultQuestion = results.find(i => i.id === question._id.toString());
-        const isCorrect = question.answers.every((answer) => {
-            return resultQuestion.answers.includes(answer);
-        });
+        const correctResult = resultQuestion.answers[0];
+        const questionResult = question.answers[0];
 
-        if(!isCorrect) {
-            correctAnswer = question.answers.filter((answer) => !resultQuestion.answers.includes(answer));
-            notCorrectAnswer = question.answers.filter((answer) => resultQuestion.answers.includes(answer));
+        if(correctResult === questionResult){
+            correctAnswer++;
+        } else {
+            notCorrectAnswer++;
         }
+
         resultsByIds.push({
             qid: question._id.toString(),
             results: [...resultQuestion.answers].pop()
         });
     });
-    const score = correctAnswer.length / (correctAnswer.length + notCorrectAnswer.length);
+    console.log('correctAnswer', correctAnswer)
+    console.log('notCorrectAnswer', notCorrectAnswer)
+    const score = (correctAnswer / (correctAnswer + notCorrectAnswer)).toFixed(2);
+    console.log('score', score)
     return await saveUserTest(resultsIds, resultsByIds, score, userId, testType);
 }
 
