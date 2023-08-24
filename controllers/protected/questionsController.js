@@ -111,7 +111,7 @@ const getResultsIDOfAnsweredQuestions = async (results, userId, testType) => {
     });
     console.log('correctAnswer', correctAnswer)
     console.log('notCorrectAnswer', notCorrectAnswer)
-    const score = (correctAnswer / (correctAnswer + notCorrectAnswer)).toFixed(2);
+    const score = ((correctAnswer / (correctAnswer + notCorrectAnswer)).toFixed(2) * 100).toFixed(2);
     console.log('score', score)
     return await saveUserTest(resultsIds, resultsByIds, score, userId, testType);
 }
