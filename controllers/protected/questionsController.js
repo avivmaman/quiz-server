@@ -1,6 +1,7 @@
 const {Question, Category, UserTests} = require("../../utils/Models");
 const helper = require("../../utils/helper");
 const mongoose = require("mongoose");
+const {Mongoose} = require("mongoose");
 
 const filterIsActive = (isActiveFilter) => isActiveFilter ? {isActive: true} : {};
 
@@ -9,14 +10,33 @@ const getAllQuestions = async (isActiveFilter = true) => {
     return helper.questionsDao(questionsQuery);
 };
 
+const countAllQuestions = async (isActiveFilter = true) => {
+    const questionsQuery = await Question.countDocuments(filterIsActive(isActiveFilter));
+    return questionsQuery;
+};
+
 const getAllQuestionsByLimit = async (skip, limit = 1, isActiveFilter = true) => {
     const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category').skip(skip).limit(limit);
+    return helper.questionsDao(questionsQuery);
+};
+
+const getAllQuestionsByLimitAndCategory = async (categoryId, skip, limit = 1, isActiveFilter = true) => {
+    const questionsQuery = await Question.find({...filterIsActive(isActiveFilter), category: new mongoose.Types.ObjectId(categoryId) }).sort({questionNumber: 1}).populate('category').skip(skip).limit(limit);
     return helper.questionsDao(questionsQuery);
 };
 
 const getQuestionByObject = async (objectToFind, isActiveFilter = true) => {
     const questionsQuery = await Question.findOne({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category');
     return helper.questionDao(questionsQuery);
+};
+
+const getQuestionsByObject = async (objectToFind,isCount = false, isActiveFilter = true) => {
+    if(isCount){
+        return (await Question.countDocuments({...objectToFind, ...filterIsActive(isActiveFilter)}));
+    }else {
+        const questionsQuery = await Question.find({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category');
+        return helper.questionsDao(questionsQuery);
+    }
 };
 
 
@@ -177,6 +197,18 @@ const saveQuestion = async (question) => {
     newQuestion.isActive = question.isActive;
     await newQuestion.save();
 }
+
+const addQuestion = async (question) => {
+    const newQuestion = new Question();
+    newQuestion.answers = question.answers;
+    newQuestion.answerDescription = question.answerDescription;
+    newQuestion.questionDescription = question.questionDescription;
+    newQuestion.isActive = question.isActive;
+    newQuestion.category = question.category;
+    newQuestion.questionNumber = question.questionNumber;
+
+    await newQuestion.save();
+}
 const getAllQuestionsController = async (req, res) => {
     try{
         const allQuestions = await getAllQuestions();
@@ -191,13 +223,36 @@ const getAllQuestionsController = async (req, res) => {
 // Admin Routes
 const getQuestionNumberController = async (req, res) => {
     try{
-        let count = 0;
-        if(req.params.number === '1'){
-            const allQuestions = await getAllQuestions(false);
-            count = allQuestions.length;
-        }
+        let count = await countAllQuestions(false);
         const question = (await getAllQuestionsByLimit(req.params.number - 1, 1, false))[0];
         res.json({question, count});
+    }catch (e) {
+        console.log('Error', e);
+        res.status(403).send({error : "Cant get all questions, try again later"});
+    }
+
+};
+
+const getQuestionNumberAndCategoryController = async (req, res) => {
+    try{
+        let count = await getQuestionsByObject({
+            category: new mongoose.Types.ObjectId(req.params.category)
+        }, true, false);
+
+        const question = (await getAllQuestionsByLimitAndCategory(req.params.category,req.params.number - 1, 1, false))[0];
+        res.json({question, count});
+    }catch (e) {
+        console.log('Error', e);
+        res.status(403).send({error : "Cant get all questions, try again later"});
+    }
+
+};
+
+const getQuestionHighestNumberController = async (req, res) => {
+    try{
+        let num = await Question.findOne().sort({questionNumber: -1});
+
+        res.json({count : num.questionNumber});
     }catch (e) {
         console.log('Error', e);
         res.status(403).send({error : "Cant get all questions, try again later"});
@@ -263,14 +318,27 @@ const saveQuestionController = async (req, res) => {
     }
 };
 
+const addQuestionController = async (req, res) => {
+    try {
+        await addQuestion(req.body);
+        res.send('ok');
+    }catch (e) {
+        console.log('Error', e);
+        res.status(500).send('Error saving the questions');
+    }
+};
+
 module.exports = {
     getAllQuestionsController,
     getQuestionsSplitByAllCategoriesCountController,
     getResultsOfAnsweredQuestionsController,
     saveQuestionController,
+    addQuestionController,
     getAllCategoryQuestionsController,
     getCategoryTestController,
     getQuestionNumberController,
+    getQuestionNumberAndCategoryController,
+    getQuestionHighestNumberController,
     getAllQuestions,
     getQuestionsSplitByAllCategoriesCount
 };

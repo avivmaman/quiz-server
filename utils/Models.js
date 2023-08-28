@@ -9,7 +9,6 @@ const questionSchema = new Schema({
     },
     questionImage: {
         type: String,
-        required: true
     },
     questionDescription: {
         type: String,
