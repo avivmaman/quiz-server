@@ -12,6 +12,7 @@ const connect = require("./utils/connection");
 const setQuestionsRoutes = require("./routes/protected/questionsRoute");
 const setCategoriesRoutes = require("./routes/protected/categoriesRoute");
 const setTestRoutes = require("./routes/protected/testsRoute");
+const setMembershipRoutes = require("./routes/protected/membershipRoute");
 
 // Authorization middleware. When used, the Access Token must
 // exist and be verified against the Auth0 JSON Web Key Set.
@@ -39,6 +40,7 @@ app.use(cors());
 setQuestionsRoutes(app);
 setCategoriesRoutes(app);
 setTestRoutes(app);
+setMembershipRoutes(app);
 
 // Start the server
 const port = process.env.PORT || 3001;

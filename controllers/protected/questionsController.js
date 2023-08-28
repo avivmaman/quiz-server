@@ -6,7 +6,7 @@ const {Mongoose} = require("mongoose");
 const filterIsActive = (isActiveFilter) => isActiveFilter ? {isActive: true} : {};
 
 const getAllQuestions = async (isActiveFilter = true) => {
-    const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category');
+    const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category membership');
     return helper.questionsDao(questionsQuery);
 };
 
@@ -16,17 +16,17 @@ const countAllQuestions = async (isActiveFilter = true) => {
 };
 
 const getAllQuestionsByLimit = async (skip, limit = 1, isActiveFilter = true) => {
-    const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category').skip(skip).limit(limit);
+    const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category membership').skip(skip).limit(limit);
     return helper.questionsDao(questionsQuery);
 };
 
 const getAllQuestionsByLimitAndCategory = async (categoryId, skip, limit = 1, isActiveFilter = true) => {
-    const questionsQuery = await Question.find({...filterIsActive(isActiveFilter), category: new mongoose.Types.ObjectId(categoryId) }).sort({questionNumber: 1}).populate('category').skip(skip).limit(limit);
+    const questionsQuery = await Question.find({...filterIsActive(isActiveFilter), category: new mongoose.Types.ObjectId(categoryId) }).sort({questionNumber: 1}).populate('category membership').skip(skip).limit(limit);
     return helper.questionsDao(questionsQuery);
 };
 
 const getQuestionByObject = async (objectToFind, isActiveFilter = true) => {
-    const questionsQuery = await Question.findOne({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category');
+    const questionsQuery = await Question.findOne({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category membership');
     return helper.questionDao(questionsQuery);
 };
 
@@ -34,14 +34,14 @@ const getQuestionsByObject = async (objectToFind,isCount = false, isActiveFilter
     if(isCount){
         return (await Question.countDocuments({...objectToFind, ...filterIsActive(isActiveFilter)}));
     }else {
-        const questionsQuery = await Question.find({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category');
+        const questionsQuery = await Question.find({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category membership');
         return helper.questionsDao(questionsQuery);
     }
 };
 
 
 const getAllCategoryQuestions = async (category, isActiveFilter = true) => {
-    const questionsQuery = await Question.find({ category, ...filterIsActive(isActiveFilter) }).populate('category');
+    const questionsQuery = await Question.find({ category, ...filterIsActive(isActiveFilter) }).populate('category membership');
     const randomizedQuestions = questionsQuery.sort(() => Math.random() - 0.5);
     return helper.questionsDao(randomizedQuestions);
 };
@@ -195,6 +195,7 @@ const saveQuestion = async (question) => {
     newQuestion.answerDescription = question.answerDescription;
     newQuestion.questionDescription = question.questionDescription;
     newQuestion.isActive = question.isActive;
+    newQuestion.membership = question.membership;
     await newQuestion.save();
 }
 
@@ -206,7 +207,7 @@ const addQuestion = async (question) => {
     newQuestion.isActive = question.isActive;
     newQuestion.category = question.category;
     newQuestion.questionNumber = question.questionNumber;
-
+    newQuestion.membership = question.membership;
     await newQuestion.save();
 }
 const getAllQuestionsController = async (req, res) => {

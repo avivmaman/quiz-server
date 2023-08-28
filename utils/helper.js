@@ -28,6 +28,7 @@ const questionDao = (question, admin = true) => {
             answerDescription : question.answerDescription,
             category : question.category.categoryName,
             isActive: question.isActive,
+            membership: question.membership,
         };
         if(admin) {
             returnObject.answers = question.answers;

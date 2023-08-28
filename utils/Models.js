@@ -28,7 +28,13 @@ const questionSchema = new Schema({
     isActive: {
         type: Boolean,
         default: true
-    }
+    },
+    membership: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Membership',
+        }
+    ]
 }, { timestamps: true });
 
 const Question = mongoose.model('Question', questionSchema);
@@ -50,6 +56,15 @@ const categorySchema = new Schema({
 }, { timestamps: true });
 
 const Category = mongoose.model('Category', categorySchema);
+
+const membershipSchema = new Schema({
+    title: {
+        type: String,
+        required: true
+    }
+}, { timestamps: true });
+
+const Membership = mongoose.model('Membership', membershipSchema);
 
 // Category Model
 const userTestsSchema = new Schema({
@@ -88,5 +103,6 @@ const UserTests = mongoose.model('UserTests', userTestsSchema);
 module.exports = {
     Question,
     Category,
-    UserTests
+    UserTests,
+    Membership
 };
