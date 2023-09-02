@@ -1,53 +1,82 @@
 const {Question, Category, UserTests} = require("../../utils/Models");
 const helper = require("../../utils/helper");
 const mongoose = require("mongoose");
-const {Mongoose} = require("mongoose");
 
 const filterIsActive = (isActiveFilter) => isActiveFilter ? {isActive: true} : {};
 
-const getAllQuestions = async (isActiveFilter = true) => {
-    const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category membership');
+const getAllQuestionsBase = (query = {}, isActiveFilter = true, extra = {}) => {
+    const mainFilter = {
+        ...query,
+        ...filterIsActive(isActiveFilter),
+    };
+
+    if(extra.hasOwnProperty('membership') && Array.isArray(extra.membership) && extra.membership.length > 0){
+        mainFilter.membership = {
+            $in: extra.membership.map(id => new mongoose.Types.ObjectId(id))
+        };
+    }
+    return Question.find(mainFilter);
+};
+
+const getAllQuestionsCountBase = (query = {}, isActiveFilter = true, extra = {}) => {
+    const mainFilter = {
+        ...query,
+        ...filterIsActive(isActiveFilter),
+    };
+
+    if(extra.hasOwnProperty('membership') && Array.isArray(extra.membership) && extra.membership.length > 0){
+        mainFilter.membership = {
+            $in: extra.membership.map(id => new mongoose.Types.ObjectId(id))
+        };
+    }
+    return Question.countDocuments(mainFilter);
+};
+
+const getAllQuestions = async (isActiveFilter = true, extra = {}) => {
+    return (await getAllQuestionsBase({}, isActiveFilter, extra).sort({
+        category: 1,
+        questionNumber: 1
+    }).populate('category membership'));
+};
+
+const countAllQuestions = async (isActiveFilter = true, extra = {}) => {
+    return (await getAllQuestionsCountBase({}, isActiveFilter, extra));
+};
+
+const getAllQuestionsByLimit = async (skip, limit = 1, isActiveFilter = true, extra = {}) => {
+    const questionsQuery = await getAllQuestionsBase({}, isActiveFilter, extra).sort({category: 1, questionNumber: 1}).populate('category membership').skip(skip).limit(limit);
     return helper.questionsDao(questionsQuery);
 };
 
-const countAllQuestions = async (isActiveFilter = true) => {
-    const questionsQuery = await Question.countDocuments(filterIsActive(isActiveFilter));
-    return questionsQuery;
-};
-
-const getAllQuestionsByLimit = async (skip, limit = 1, isActiveFilter = true) => {
-    const questionsQuery = await Question.find(filterIsActive(isActiveFilter)).sort({category: 1, questionNumber: 1}).populate('category membership').skip(skip).limit(limit);
+const getAllQuestionsByLimitAndCategory = async (categoryId, skip, limit = 1, isActiveFilter = true, extra = {}) => {
+    const questionsQuery = await getAllQuestionsBase({category: new mongoose.Types.ObjectId(categoryId) }, isActiveFilter, extra).sort({questionNumber: 1}).populate('category membership').skip(skip).limit(limit);
     return helper.questionsDao(questionsQuery);
 };
 
-const getAllQuestionsByLimitAndCategory = async (categoryId, skip, limit = 1, isActiveFilter = true) => {
-    const questionsQuery = await Question.find({...filterIsActive(isActiveFilter), category: new mongoose.Types.ObjectId(categoryId) }).sort({questionNumber: 1}).populate('category membership').skip(skip).limit(limit);
-    return helper.questionsDao(questionsQuery);
-};
-
-const getQuestionByObject = async (objectToFind, isActiveFilter = true) => {
-    const questionsQuery = await Question.findOne({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category membership');
+const getQuestionByObject = async (objectToFind, isActiveFilter = true, extra) => {
+    const questionsQuery = await getAllQuestionsBase({...objectToFind}, isActiveFilter, extra).populate('category membership');
     return helper.questionDao(questionsQuery);
 };
 
-const getQuestionsByObject = async (objectToFind,isCount = false, isActiveFilter = true) => {
+const getQuestionsByObject = async (objectToFind,isCount = false, isActiveFilter = true, extra = {}) => {
+    console.log('objectToFind', objectToFind, isActiveFilter, extra);
     if(isCount){
-        return (await Question.countDocuments({...objectToFind, ...filterIsActive(isActiveFilter)}));
+        return (await getAllQuestionsCountBase({...objectToFind}, isActiveFilter, extra));
     }else {
-        const questionsQuery = await Question.find({...objectToFind, ...filterIsActive(isActiveFilter)}).populate('category membership');
+        const questionsQuery = await getAllQuestionsBase({...objectToFind}, isActiveFilter, extra).populate('category membership');
         return helper.questionsDao(questionsQuery);
     }
 };
 
 
-const getAllCategoryQuestions = async (category, isActiveFilter = true) => {
-    const questionsQuery = await Question.find({ category, ...filterIsActive(isActiveFilter) }).populate('category membership');
+const getAllCategoryQuestions = async (category, isActiveFilter = true, extra = {}) => {
+    const questionsQuery = await getAllQuestionsBase({ category }, isActiveFilter, extra).populate('category membership');
     const randomizedQuestions = questionsQuery.sort(() => Math.random() - 0.5);
     return helper.questionsDao(randomizedQuestions);
 };
 
-const getCategoryTest = async (category) => {
-    const questionsQuery = await getAllCategoryQuestions(category);
+const getCategoryTest = async (category, isActiveFilter = true, extra = {}) => {
+    const questionsQuery = await getAllCategoryQuestions(category, true, extra);
     if(questionsQuery.length < 20){
         return questionsQuery;
     }else{
@@ -56,96 +85,52 @@ const getCategoryTest = async (category) => {
     }
 };
 
-const getQuestionsSplitByAllCategoriesCount = async (limit, isActiveFilter = true) => {
-    let categoryIds = await Category.find({});
-    categoryIds = categoryIds.map((cat) => cat._id);
-    const totalQuestions = limit;
-    const splitSize = Math.floor(totalQuestions / categoryIds.length);
+const getQuestionsSplitByAllCategoriesCount = async (limit, isActiveFilter = true, extra = {}) => {
+    const mainFilter = {
+        ...filterIsActive(isActiveFilter),
+    };
 
-    let results ;
-    if(isActiveFilter){
-        results = await Question.aggregate([
-            {
-                $match: {
-                    category: { $in: categoryIds.map(id => new mongoose.Types.ObjectId(id)) },
-                },
-            },
-            {
-                $match: {
-                    isActive: true
-                },
-            },
-            {
-                $group: {
-                    _id: "$category",
-                    questions: { $push: "$$ROOT" }
-                }
-            },
-            { $lookup: {from: 'categories', localField: 'category', foreignField: '_id', as: 'category'} },
-        ]);
-    }else{
-        results = await Question.aggregate([
-            {
-                $match: {
-                    category: { $in: categoryIds.map(id => new mongoose.Types.ObjectId(id)) },
-                },
-            },
-            {
-                $group: {
-                    _id: "$category",
-                    questions: { $push: "$$ROOT" }
-                }
-            },
-            { $lookup: {from: 'categories', localField: 'category', foreignField: '_id', as: 'category'} },
-        ]);
+    if(extra.hasOwnProperty('membership') && Array.isArray(extra.membership) && extra.membership.length > 0){
+        mainFilter.membership = {
+            $in: extra.membership.map(id => new mongoose.Types.ObjectId(id))
+        };
     }
-    const aggregatedQuestions = results.reduce((accumulator, category) => {
-        // Randomize the questions within each category
-        const randomizedQuestions = category.questions.sort(() => Math.random() - 0.5);
-        // Split the questions according to the split size
-        const splitQuestions = randomizedQuestions.slice(0, splitSize);
-        accumulator.push(...splitQuestions);
-        return accumulator;
-    }, []);
 
-    const remainingQuestions = totalQuestions - aggregatedQuestions.length;
-    const remainingCategoryIds = categoryIds.filter(id =>
-        !aggregatedQuestions.some(question => question.category.toString() === id)
-    );
+    const numQuestionsToRetrieve = 50;
+    const categories = await Category.find(mainFilter);
+    const questionPerCategory = Math.floor(numQuestionsToRetrieve / categories.length);
+    let remainingQuestions = numQuestionsToRetrieve - (questionPerCategory * categories.length);
 
-    // If there are remaining slots and categories available, add more questions
-    if (remainingQuestions > 0) {
-        if(isActiveFilter){
-            const moreResults = await Question.aggregate([
-                {
-                    $match: {
-                        category: { $in: ["64b6cece36a40f550ba93f87", "64b6ce6236a40f550ba93c7d"].map(id => new mongoose.Types.ObjectId(id))},
-                        isActive: true
-                    }
-                },
-                {
-                    $sample: { size: remainingQuestions }
-                },
-                { $lookup: {from: 'categories', localField: 'category', foreignField: '_id', as: 'category'} },
-            ]);
-            aggregatedQuestions.push(...moreResults);
-        }else{
-            const moreResults = await Question.aggregate([
-                {
-                    $match: {
-                        category: { $in: ["64b6cece36a40f550ba93f87", "64b6ce6236a40f550ba93c7d"].map(id => new mongoose.Types.ObjectId(id))},
-                    }
-                },
-                {
-                    $sample: { size: remainingQuestions }
-                },
-                { $lookup: {from: 'categories', localField: 'category', foreignField: '_id', as: 'category'} },
-            ]);
-            aggregatedQuestions.push(...moreResults);
+    // Combine questions from each category with random questions
+    const finalQuestions = [];
+    for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        const questions = await Question.find({ ...mainFilter, category: category._id }).limit(questionPerCategory).populate('category membership');
+        if(questions.length < questionPerCategory){
+            remainingQuestions = remainingQuestions + (questionPerCategory - questions.length);
         }
-
+        finalQuestions.push(...questions);
     }
-    return helper.questionsDao(aggregatedQuestions);
+    // Step 4: Retrieve random questions from all categories
+    let randomQuestions = await Question.aggregate([
+        { $match: mainFilter },
+        {
+            $match: {
+                _id: { $nin: finalQuestions.map(question => new mongoose.Types.ObjectId(question._id)) }
+            }
+        },
+        { $sample: { size: remainingQuestions } },
+        { $lookup: { from: 'categories', localField: 'category', foreignField: '_id', as: 'category' } }
+    ]);
+    randomQuestions = randomQuestions.map(question => {
+        return {
+            ...question,
+            category: question.category[0]
+        };
+    });
+
+    finalQuestions.push(...randomQuestions);
+    return helper.questionsDao(finalQuestions);
 }
 
 const getResultsIDOfAnsweredQuestions = async (results, userId, testType) => {
@@ -213,7 +198,7 @@ const addQuestion = async (question) => {
 const getAllQuestionsController = async (req, res) => {
     try{
         const allQuestions = await getAllQuestions();
-        res.json(allQuestions);
+        res.json(helper.questionsDao(allQuestions));
     }catch (e) {
         console.log('Error', e);
         res.status(403).send({error : "Cant get all questions, try again later"});
@@ -224,7 +209,9 @@ const getAllQuestionsController = async (req, res) => {
 // Admin Routes
 const getQuestionNumberController = async (req, res) => {
     try{
-        let count = await countAllQuestions(false);
+        const auth = req.auth;
+        const userPackage = helper.getClaimFromAuth0(auth, 'package');
+        let count = await countAllQuestions({}, false, {membership: [userPackage]});
         const question = (await getAllQuestionsByLimit(req.params.number - 1, 1, false))[0];
         res.json({question, count});
     }catch (e) {
@@ -263,7 +250,9 @@ const getQuestionHighestNumberController = async (req, res) => {
 
 const getAllCategoryQuestionsController = async (req, res) => {
     try{
-        const allQuestions = await getAllCategoryQuestions(req.params.category);
+        const auth = req.auth;
+        const userPackage = helper.getClaimFromAuth0(auth, 'package');
+        const allQuestions = await getAllCategoryQuestions(req.params.category, true, {membership: [userPackage]});
         res.json(allQuestions);
     }catch (e) {
         console.log('Error', e);
@@ -274,7 +263,9 @@ const getAllCategoryQuestionsController = async (req, res) => {
 
 const getCategoryTestController = async (req, res) => {
     try{
-        const allQuestions = await getCategoryTest(req.params.category);
+        const auth = req.auth;
+        const userPackage = helper.getClaimFromAuth0(auth, 'package');
+        const allQuestions = await getCategoryTest(req.params.category, true, {membership: [userPackage]});
         res.json(allQuestions);
     }catch (e) {
         console.log('Error', e);
@@ -285,7 +276,9 @@ const getCategoryTestController = async (req, res) => {
 
 const getQuestionsSplitByAllCategoriesCountController = async (req, res) => {
     try {
-        const aggregatedQuestions = await getQuestionsSplitByAllCategoriesCount(10);
+        const auth = req.auth;
+        const userPackage = helper.getClaimFromAuth0(auth, 'package');
+        const aggregatedQuestions = await getQuestionsSplitByAllCategoriesCount(50, true, {membership: [userPackage]});
         res.send({
             count : aggregatedQuestions.length,
             aggregatedQuestions

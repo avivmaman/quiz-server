@@ -1,18 +1,18 @@
-const {checkJwt, questionLimiter, isAdmin} = require("../../utils/helper");
+const {checkJwt, questionLimiter, isAdmin, membershipMiddleware} = require("../../utils/helper");
 const {getAllQuestionsController, getQuestionsSplitByAllCategoriesCountController,
     getResultsOfAnsweredQuestionsController, saveQuestionController, getCategoryTestController,
     getAllCategoryQuestionsController, getQuestionNumberController, getQuestionNumberAndCategoryController,
     addQuestionController, getQuestionHighestNumberController
 } = require("../../controllers/protected/questionsController");
 const setQuestionsRoutes = (app) => {
-    app.get('/api/questions', checkJwt, questionLimiter, getAllQuestionsController);
+    app.get('/api/questions', checkJwt, questionLimiter, membershipMiddleware, getAllQuestionsController);
 
-    app.get('/api/mainQuiz', checkJwt, questionLimiter, getQuestionsSplitByAllCategoriesCountController);
+    app.get('/api/mainQuiz', checkJwt, questionLimiter, membershipMiddleware, getQuestionsSplitByAllCategoriesCountController);
 
-    app.get('/api/questions/:category', checkJwt, questionLimiter, getAllCategoryQuestionsController);
+    app.get('/api/questions/:category', checkJwt, questionLimiter, membershipMiddleware, getAllCategoryQuestionsController);
 
-    app.get('/api/questions/:category/test', checkJwt, questionLimiter, getCategoryTestController);
-    app.post('/api/mainQuiz/:testType', checkJwt, questionLimiter, getResultsOfAnsweredQuestionsController);
+    app.get('/api/questions/:category/test', checkJwt, questionLimiter, membershipMiddleware, getCategoryTestController);
+    app.post('/api/mainQuiz/:testType', checkJwt, questionLimiter, membershipMiddleware, getResultsOfAnsweredQuestionsController);
 
 
     // Admin Section

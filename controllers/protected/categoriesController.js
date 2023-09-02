@@ -1,6 +1,25 @@
 const {Category} = require("../../utils/Models");
-const getAllCategories = async () => {
-    return await Category.find({});
+const mongoose = require("mongoose");
+const helper = require("../../utils/helper");
+
+const filterIsActive = (isActiveFilter) => isActiveFilter ? {isActive: true} : {};
+
+const getAllCategoriesBase =  (query ={}, isActiveFilter = true, extra = {}) => {
+    const mainFilter = {
+        ...query,
+        ...filterIsActive(isActiveFilter),
+    };
+
+    if(extra.hasOwnProperty('membership') && Array.isArray(extra.membership) && extra.membership.length > 0){
+        mainFilter.membership = {
+            $in: extra.membership.map(id => new mongoose.Types.ObjectId(id))
+        };
+    }
+    return Category.find(mainFilter);
+};
+
+const getAllCategories = async (isActiveFilter = true, extra = {}) => {
+    return await getAllCategoriesBase({}, true, extra);
 };
 
 const saveCategory = async (category) => {
@@ -22,7 +41,9 @@ const saveCategoryController = async (req, res) => {
 
 const getAllCategoriesController = async (req, res) => {
     try{
-        const categories = await getAllCategories();
+        const auth = req.auth;
+        const userPackage = helper.getClaimFromAuth0(auth, 'package');
+        const categories = await getAllCategories(true, {membership: [userPackage]});
         res.json(categories);
     }catch (err) {
         console.error(err);
