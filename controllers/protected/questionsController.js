@@ -176,23 +176,47 @@ const saveUserTest = async (questionsIds, answers, score, userId, testType) => {
 // Admin Routes
 const saveQuestion = async (question) => {
     const newQuestion = await Question.findById(question.id);
-    newQuestion.answers = question.answers;
-    newQuestion.answerDescription = question.answerDescription;
-    newQuestion.questionDescription = question.questionDescription;
-    newQuestion.isActive = question.isActive;
-    newQuestion.membership = question.membership;
+    if(question.hasOwnProperty("answers")) {
+        newQuestion.answers = question.answers;
+    }
+    if(question.hasOwnProperty("answerDescription")) {
+        newQuestion.answerDescription = question.answerDescription;
+    }
+    if(question.hasOwnProperty("questionDescription")) {
+        newQuestion.questionDescription = question.questionDescription;
+    }
+    if(question.hasOwnProperty("isActive")) {
+        newQuestion.isActive = question.isActive;
+    }
+    if(question.hasOwnProperty("membership")) {
+        newQuestion.membership = question.membership;
+    }
     await newQuestion.save();
 }
 
 const addQuestion = async (question) => {
     const newQuestion = new Question();
-    newQuestion.answers = question.answers;
-    newQuestion.answerDescription = question.answerDescription;
-    newQuestion.questionDescription = question.questionDescription;
-    newQuestion.isActive = question.isActive;
-    newQuestion.category = question.category;
-    newQuestion.questionNumber = question.questionNumber;
-    newQuestion.membership = question.membership;
+    if(question.hasOwnProperty("answers")) {
+        newQuestion.answers = question.answers;
+    }
+    if(question.hasOwnProperty("answerDescription")) {
+        newQuestion.answerDescription = question.answerDescription;
+    }
+    if(question.hasOwnProperty("questionDescription")) {
+        newQuestion.questionDescription = question.questionDescription;
+    }
+    if(question.hasOwnProperty("isActive")) {
+        newQuestion.isActive = question.isActive;
+    }
+    if(question.hasOwnProperty("membership")) {
+        newQuestion.membership = question.membership;
+    }
+    if(question.hasOwnProperty("category")) {
+        newQuestion.category = question.category;
+    }
+    if(question.hasOwnProperty("questionNumber")) {
+        newQuestion.questionNumber = question.questionNumber;
+    }
     await newQuestion.save();
 }
 const getAllQuestionsController = async (req, res) => {

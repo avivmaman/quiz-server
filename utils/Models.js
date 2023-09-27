@@ -52,7 +52,17 @@ const categorySchema = new Schema({
     parentCategory: {
         type: Schema.Types.ObjectId,
         ref: 'Category'
-    }
+    },
+    membership: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Membership',
+        }
+    ],
+    isActive: {
+        type: Boolean,
+        default: true
+    },
 }, { timestamps: true });
 
 const Category = mongoose.model('Category', categorySchema);

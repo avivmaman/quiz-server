@@ -1,4 +1,4 @@
-const {Membership} = require("../../utils/Models");
+const {Membership, Category} = require("../../utils/Models");
 const helper = require("../../utils/helper");
 const getAllMemberships = async (findObject = {}) => {
     return (await Membership.find(findObject));
@@ -28,7 +28,26 @@ const getMembershipByIdController = async (req, res) => {
     }
 }
 
+const saveMembership = async (membership) => {
+    const findMembership = await getMembershipById(membership._id);
+    if(membership.hasOwnProperty("title")) {
+        findMembership.title = membership.title;
+    }
+    await findMembership.save();
+};
+
+const saveMembershipController = async (req, res) => {
+    try {
+        await saveMembership(req.body);
+        res.send('ok');
+    }catch (e) {
+        console.log('Error', e);
+        res.status(500).send('Error saving the membership');
+    }
+}
+
 module.exports = {
     getAllMembershipsController,
+    saveMembershipController,
     getMembershipByIdController
 }

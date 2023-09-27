@@ -91,7 +91,6 @@ const getClaimFromAuth0= (auth0, claimToGet, fromSubClaims = true) => {
 const checkIsAdmin = (auth0) => {
     const allowedRoles = getClaimFromAuth0(auth0, 'x-allowed-roles');
     return !!(allowedRoles && allowedRoles.includes('admin'));
-
 }
 
 const isAdmin = (req, res, next) => {
@@ -134,5 +133,6 @@ module.exports = {
     questionLimiter,
     membershipMiddleware,
     getAccessToken,
-    localCache
+    localCache,
+    checkIsAdmin
 };

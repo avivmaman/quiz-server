@@ -19,13 +19,23 @@ const getAllCategoriesBase =  (query ={}, isActiveFilter = true, extra = {}) => 
 };
 
 const getAllCategories = async (isActiveFilter = true, extra = {}) => {
-    return await getAllCategoriesBase({}, true, extra);
+    return await getAllCategoriesBase({}, isActiveFilter, extra).populate("membership");
 };
 
 const saveCategory = async (category) => {
     const findCategory = await Category.findById(category._id);
-    findCategory.categoryName = category.categoryName;
-    findCategory.description = category.description;
+    if(category.hasOwnProperty("categoryName")){
+        findCategory.categoryName = category.categoryName;
+    }
+    if(category.hasOwnProperty("description")) {
+        findCategory.description = category.description;
+    }
+    if(category.hasOwnProperty("membership")) {
+        findCategory.membership = category.membership;
+    }
+    if(category.hasOwnProperty("isActive")) {
+        findCategory.isActive = category.isActive;
+    }
     await findCategory.save();
 };
 
@@ -42,8 +52,20 @@ const saveCategoryController = async (req, res) => {
 const getAllCategoriesController = async (req, res) => {
     try{
         const auth = req.auth;
+        const isAdmin = helper.checkIsAdmin(auth);
         const userPackage = helper.getClaimFromAuth0(auth, 'package');
-        const categories = await getAllCategories(true, {membership: [userPackage]});
+        const extra = isAdmin ? {} : {membership: [userPackage]};
+        const categories = await getAllCategories(!isAdmin, extra);
+        res.json(categories);
+    }catch (err) {
+        console.error(err);
+        res.status(500).json({message: err.message});
+    }
+};
+
+const getAllCategoriesAdminController = async (req, res) => {
+    try{
+        const categories = await getAllCategories(false);
         res.json(categories);
     }catch (err) {
         console.error(err);
@@ -53,6 +75,7 @@ const getAllCategoriesController = async (req, res) => {
 
 module.exports = {
     getAllCategoriesController,
+    getAllCategoriesAdminController,
     saveCategoryController,
     getAllCategories
 }
