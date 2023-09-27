@@ -211,7 +211,7 @@ const getQuestionNumberController = async (req, res) => {
     try{
         const auth = req.auth;
         const userPackage = helper.getClaimFromAuth0(auth, 'package');
-        let count = await countAllQuestions({}, false, {membership: [userPackage]});
+        let count = await countAllQuestions(false, false, {membership: [userPackage]});
         const question = (await getAllQuestionsByLimit(req.params.number - 1, 1, false))[0];
         res.json({question, count});
     }catch (e) {
