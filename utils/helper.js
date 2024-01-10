@@ -85,6 +85,9 @@ const getClaimFromAuth0= (auth0, claimToGet, fromSubClaims = true) => {
     if(claims.hasOwnProperty(claimToGet)) {
         return claims[claimToGet];
     }
+    if(claimToGet === 'id') {
+        return claims.sub;
+    }
     return null;
 }
 
